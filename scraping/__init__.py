@@ -168,6 +168,53 @@ def getWSJ(urlName):
     return res
 
 
+def getMainichi(urlName):
+    content = requests.get(urlName).text
+    soup = BeautifulSoup(content, "html.parser")
+    elems = soup.find_all("a", class_="icon_plus")
+
+    res = []
+
+    for elem in elems:
+        id = elem.get('id')
+        if id == 'headlineList01':
+            title = elem.text.strip()
+            url = elem.get('href')
+        else:    
+            title = elem.find_next("span").text.strip()
+            url = elem.get('href')
+        data = {'title': '', 'url': ''}
+        # urlにhttpsが含まれているか否か
+        # checkUrlHasHttps = re.search('https', url)
+        # if not checkUrlHasHttps:
+        #     url = urlName + url
+        data['title'] = title
+        data['url'] = 'https:' + url
+        res.append(data)
+    return res
+
+
+def getToyo(urlName):
+    content = requests.get(urlName).text
+    soup = BeautifulSoup(content, "html.parser")
+    elems = soup.find_all(class_="title")
+
+    res = []
+
+    for elem in elems:   
+        title = elem.find_next("a").text.replace('\n', ' ')
+        url = elem.find_next("a").get('href')
+        data = {'title': '', 'url': ''}
+        # urlにhttpsが含まれているか否か
+        # checkUrlHasHttps = re.search('https', url)
+        # if not checkUrlHasHttps:
+        #     url = urlName + url
+        data['title'] = title
+        data['url'] = urlName + url
+        res.append(data)
+    return res
+
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
     headers = {
         "Content-type": "application/json",
@@ -197,6 +244,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     elif name == 'wsj':
         urlName = 'https://www.wsj.com'
         res = getWSJ(urlName)
+    elif name == 'mainichi':
+        urlName = 'https://mainichi.jp'
+        res = getMainichi(urlName)
+    elif name == 'toyo':
+        urlName = 'https://toyokeizai.net'
+        res = getToyo(urlName)
     else:
         return func.HttpResponse(
             "Please pass a name on the query string or in the request body",
